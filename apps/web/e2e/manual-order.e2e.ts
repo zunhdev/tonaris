@@ -1,7 +1,7 @@
 // Manual order and moves in a real browser (FR-05.2–FR-05.4, FR-01.4, FR-01.5, FR-09.4; DS-49, DS-51): rearranging
-// by keyboard and by dragging a row's handle, the hint under another sort, where new items land, rearranging being
-// presentation only, moving folders and lists with M and by dragging onto the tree, and a move from another browser.
-// Each test signs in with its own account.
+// by keyboard, by dragging a row's handle and by dragging a card (TON-322), the hint under another sort, where new
+// items land, rearranging being presentation only, moving folders and lists with M and by dragging onto the tree, and a
+// move from another browser. Each test signs in with its own account.
 
 import { bootstrapSchema, type Container } from "@tonaris/domain";
 
@@ -12,6 +12,7 @@ import {
   added,
   album,
   announcements,
+  chooseLayout,
   created,
   list,
   live,
@@ -530,3 +531,189 @@ async function dragOver(page: Page, from: Locator, to: Locator): Promise<void> {
   await page.mouse.move(x, y + 10, { steps: 3 });
   await page.mouse.move(...(await centre(to)), { steps: 12 });
 }
+
+/** A grid's cards' titles, or folders' and lists' names, in order (TON-322). */
+const cardNames = (page: Page, name: string) =>
+  grid(page, name).locator('[data-slot="card-title"]');
+const cardOf = (page: Page, gridName: string, name: string) =>
+  grid(page, gridName).getByRole("gridcell", { name: new RegExp(`^${name}`) });
+const editMode = (page: Page) =>
+  page.getByRole("radiogroup", { name: "Mode" }).getByRole("radio", { name: "Edit" }).click();
+
+/** Where in `locator` a share of its width (`x`) and height (`y`) falls. */
+async function pointIn(locator: Locator, x: number, y = 0.4): Promise<[number, number]> {
+  const box = await locator.boundingBox();
+  if (!box) throw new Error("Nothing to point at.");
+  return [box.x + box.width * x, box.y + box.height * y];
+}
+
+/** Takes hold of a card in the middle, as a person would, and holds it at `to`, the button still down. */
+async function holdCard(page: Page, card: Locator, to: [number, number]): Promise<void> {
+  const [x, y] = await centre(card);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 10, y, { steps: 3 });
+  await page.mouse.move(...to, { steps: 12 });
+}
+
+test("album cards are rearranged by dragging them, in manual order and Editing mode (TON-322)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.cardDrag);
+  await live(page);
+  const doom = await created(page, "Doom");
+  await added(
+    page,
+    [album("Nightfall"), album("Ancient Dreams"), album("Tales of Creation")],
+    doom.id,
+  );
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  await chooseLayout(page, "Grid");
+  await chooseSort(page, "Manual");
+  await expect(cardNames(page, "Doom")).toHaveText([
+    "Nightfall",
+    "Ancient Dreams",
+    "Tales of Creation",
+  ]);
+
+  // In Viewing mode, a card doesn't drag.
+  await holdCard(
+    page,
+    cardOf(page, "Doom", "Tales of Creation"),
+    await pointIn(cardOf(page, "Doom", "Nightfall"), 0.2),
+  );
+  await expect(page.locator('[data-slot="drag-overlay"]')).toHaveCount(0);
+  await page.mouse.up();
+  await expect(cardNames(page, "Doom")).toHaveText([
+    "Nightfall",
+    "Ancient Dreams",
+    "Tales of Creation",
+  ]);
+
+  // In Editing mode, it lands left of the card whose left half it is dropped on, a line showing where.
+  await editMode(page);
+  await holdCard(
+    page,
+    cardOf(page, "Doom", "Tales of Creation"),
+    await pointIn(cardOf(page, "Doom", "Nightfall"), 0.2),
+  );
+  await expect(page.locator('[data-slot="drag-overlay"]')).toContainText("Tales of Creation");
+  await expect(cardOf(page, "Doom", "Nightfall").locator('[data-slot="drop-line"]')).toHaveClass(
+    /-left-/,
+  );
+  await page.mouse.up();
+  await expect(cardNames(page, "Doom")).toHaveText([
+    "Tales of Creation",
+    "Nightfall",
+    "Ancient Dreams",
+  ]);
+  await expect(announcements(page).first()).toHaveText(
+    "Moved Tales of Creation to position 1 of 3",
+  );
+
+  // Dropped in the gap after the second card, it lands there.
+  const second = await cardOf(page, "Doom", "Nightfall").boundingBox();
+  if (!second) throw new Error("No second card.");
+  await holdCard(page, cardOf(page, "Doom", "Tales of Creation"), [
+    second.x + second.width + 5,
+    second.y + second.height * 0.4,
+  ]);
+  await expect(cardOf(page, "Doom", "Nightfall").locator('[data-slot="drop-line"]')).toHaveClass(
+    /-right-/,
+  );
+  await page.mouse.up();
+  await expect(cardNames(page, "Doom")).toHaveText([
+    "Nightfall",
+    "Tales of Creation",
+    "Ancient Dreams",
+  ]);
+
+  // A click still opens the album, and moves nothing.
+  await saved(page);
+  await cardOf(page, "Doom", "Ancient Dreams").click();
+  await expect(page.getByRole("complementary", { name: "Album" })).toBeVisible();
+  await expect(cardNames(page, "Doom")).toHaveText([
+    "Nightfall",
+    "Tales of Creation",
+    "Ancient Dreams",
+  ]);
+
+  await page.reload();
+  await live(page);
+  await expect(cardNames(page, "Doom")).toHaveText([
+    "Nightfall",
+    "Tales of Creation",
+    "Ancient Dreams",
+  ]);
+});
+
+test("folder and list cards are rearranged by dragging them, and move when dropped onto the tree (TON-322)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.folderCardDrag);
+  await live(page);
+  const metal: Container = { ...list("Metal"), kind: "folder" };
+  const doom = list("Doom");
+  const later = list("Later");
+  await page.evaluate(
+    async (containers) => {
+      await window.tonarisSync?.containers.insert(containers).when("settled");
+    },
+    [metal, doom, later],
+  );
+  // The root shows cards in manual order by default (TON-174): creation order until arranged.
+  await page.goto("/c");
+  await live(page);
+  await expect(cardNames(page, "Collection")).toHaveText(["Metal", "Doom", "Later"]);
+  await editMode(page);
+
+  // Dropped on the right half of 'Metal', 'Later' comes right after it.
+  await holdCard(
+    page,
+    cardOf(page, "Collection", "Later"),
+    await pointIn(cardOf(page, "Collection", "Metal"), 0.8),
+  );
+  await page.mouse.up();
+  await expect(cardNames(page, "Collection")).toHaveText(["Metal", "Later", "Doom"]);
+  await expect(announcements(page).first()).toHaveText("Moved Later to position 2 of 3");
+
+  // Dropped on a folder in the tree, 'Doom' moves into it.
+  const tree = page.getByRole("tree");
+  await holdCard(
+    page,
+    cardOf(page, "Collection", "Doom"),
+    await centre(tree.getByRole("treeitem", { name: /^Metal/ })),
+  );
+  await expect(tree.getByRole("treeitem", { name: /^Metal/ })).toHaveClass(/bg-accent-soft/);
+  await page.mouse.up();
+  await expect(announcements(page).first()).toHaveText("Moved Doom to Metal");
+  await expect(cardNames(page, "Collection")).toHaveText(["Metal", "Later"]);
+});
+
+test("an album card dragged onto a list in the tree joins it, in any sort (TON-322)", async ({
+  page,
+}) => {
+  await signIn(page, accounts.cardOntoList);
+  await live(page);
+  const doom = await created(page, "Doom");
+  const stoner = await created(page, "Stoner");
+  await added(page, [album("Dopesmoker"), album("Holy Mountain")], doom.id);
+  await page.goto(`/l/${doom.id}`);
+  await live(page);
+  // Sorted by year, as lists are until chosen otherwise.
+  await chooseLayout(page, "Grid");
+  await editMode(page);
+  const target = page.getByRole("tree").getByRole("treeitem", { name: /^Stoner/ });
+  await holdCard(page, cardOf(page, "Doom", "Dopesmoker"), await centre(target));
+  await expect(page.getByText("Add to Stoner", { exact: true })).toBeVisible();
+  await page.mouse.up();
+  await expect(announcements(page).first()).toHaveText("Added Dopesmoker to Stoner");
+  // It stays in Doom too.
+  await expect(cardNames(page, "Doom")).toHaveCount(2);
+  await saved(page);
+
+  await page.goto(`/l/${stoner.id}`);
+  await live(page);
+  await expect(grid(page, "Stoner").getByRole("row")).toHaveCount(2);
+});

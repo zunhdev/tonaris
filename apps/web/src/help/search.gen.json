@@ -766,8 +766,8 @@
   "heading": "Drag an album onto a list",
   "anchor": "drag-an-album-onto-a-list",
   "keywords": "",
-  "keys": "option alt L",
-  "text": "In Editing mode, with the albums shown as rows: Point at the album's row. A handle shows at its left edge. Drag the handle onto a list in the sidebar, and let go. The album is now in that list too, and stays in the one you're in. To move it instead, hold ⌥ as you let go: it leaves the list you're in and joins the other, with Undo. As you drag, a list that can take the album lights up. Folders, and lists the album is already in, don't. Albums shown as covers have no handle: use L there."
+  "keys": "option alt",
+  "text": "In Editing mode: In Grid, drag the album's card onto a list in the sidebar. In Rows, point at the album's row, then drag the handle at its left edge. Let go over the list. The album is now in that list too, and stays in the one you're in. To move it instead, hold ⌥ as you let go: it leaves the list you're in and joins the other, with Undo. As you drag, a list that can take the album lights up. Folders, and lists the album is already in, don't."
  },
  {
   "id": "organize/lists-in-and-out#work-with-several-albums",
@@ -833,7 +833,7 @@
   "anchor": "move-albums-from-one-list-to-another",
   "keywords": "",
   "keys": "option alt",
-  "text": "In Editing mode, drag the album by its handle onto the other list in the sidebar, and hold ⌥ as you let go. It leaves the list you're in and joins the other, with Undo. Without ⌥, it joins the other list and stays in this one too. Put albums in lists and take them out has the details."
+  "text": "In Editing mode, drag the album's card, or its row by the handle, onto the other list in the sidebar, and hold ⌥ as you let go. It leaves the list you're in and joins the other, with Undo. Without ⌥, it joins the other list and stays in this one too. Put albums in lists and take them out has the details."
  },
  {
   "id": "organize/move-and-rearrange#put-things-in-your-own-order",
@@ -844,7 +844,7 @@
   "anchor": "put-things-in-your-own-order",
   "keywords": "",
   "keys": "V option alt up arrow down shift cmd command ctrl control K",
-  "text": "Your own order is the Manual sort. Each list, each folder, the top level and Unsorted keep their own. Choose View, or press V, and set Sort to Manual. Select an album, folder or list in the view. Press ⌥ ↑ or ⌥ ↓ to move it up or down by one place. Press ⌥ ⇧ ↑ or ⌥ ⇧ ↓ to move it to the top or the bottom. With the mouse: in Editing mode, point at a row, then drag the handle at its left edge to where you want it. To a numbered place: select the item, press ⌘ K, choose Move to position…, type the number and choose Move. Under another sort, nothing moves, and Tonaris offers Switch to manual order. Good to know: An album you add to a list goes at its end. An album arriving in Unsorted goes at its top. The sidebar shows the folders and lists in the order their folder's page shows them. Your order is yours alone. People you share a list with keep their own order of it."
+  "text": "Your own order is the Manual sort. Each list, each folder, the top level and Unsorted keep their own. Choose View, or press V, and set Sort to Manual. Select an album, folder or list in the view. Press ⌥ ↑ or ⌥ ↓ to move it up or down by one place. Press ⌥ ⇧ ↑ or ⌥ ⇧ ↓ to move it to the top or the bottom. With the mouse: in Editing mode, drag a card to where you want it. A line between the cards shows where it will go. In Rows, point at a row, then drag the handle at its left edge. To a numbered place: select the item, press ⌘ K, choose Move to position…, type the number and choose Move. Under another sort, nothing moves, and Tonaris offers Switch to manual order. Good to know: An album you add to a list goes at its end. An album arriving in Unsorted goes at its top. The sidebar shows the folders and lists in the order their folder's page shows them. Your order is yours alone. People you share a list with keep their own order of it."
  },
  {
   "id": "organize/move-and-rearrange#moving-something-you-share",
@@ -943,7 +943,7 @@
   "anchor": "what-editing-mode-adds",
   "keywords": "",
   "keys": "Enter option alt up arrow down",
-  "text": "Checkboxes, to select several albums at once. Handles on rows, to drag albums onto lists, and to rearrange in manual order. Album titles, artists and years you change in place: double-click one, or press Enter on it. In the album panel: fields you can change, Add to list, Add field, and Delete from collection…. At the top of a folder or list: Rename, Description, and Delete folder or Delete list. Some things work the same in both modes: opening folders, lists and albums, the View options, and rearranging with ⌥ ↑ and ⌥ ↓."
+  "text": "Checkboxes, to select several albums at once. Dragging, by a row's handle or by a card: albums onto lists, and anything into your own order under Manual. Album titles, artists and years you change in place: double-click one, or press Enter on it. In the album panel: fields you can change, Add to list, Add field, and Delete from collection…. At the top of a folder or list: Rename, Description, and Delete folder or Delete list. Some things work the same in both modes: opening folders, lists and albums, the View options, and rearranging with ⌥ ↑ and ⌥ ↓."
  },
  {
   "id": "organize/viewing-and-editing#starting-a-change-switches-for-you",

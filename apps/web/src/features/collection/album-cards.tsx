@@ -15,6 +15,9 @@
 //
 // TON-284: the year and links follow right after the artist rather than the card's bottom, where on a short card
 // they sat nearer the next row's cover than their own words and read as its caption.
+//
+// TON-322: in Editing mode under Manual sort, a card drags itself among the cards, a line in the gap showing where it
+// would land; in the person's own lists and Unsorted it drags onto their lists in the tree too, as a row's handle does.
 
 // Virtualized rows are absolutely positioned, which table elements can't be without overriding their display, and
 // that drops their table semantics in some browsers; so the ARIA grid roles go on plain elements.
@@ -36,7 +39,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@tonaris/ui/components/
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useAlbumGrid } from "./album-grid";
-import { SelectBox } from "./album-rows";
+import { SelectBox, useToLists } from "./album-rows";
 import { Artwork, artworkSrc } from "./artwork";
 import {
   cardLines,
@@ -52,6 +55,7 @@ import {
 import { ChronologyYear } from "./chronology-year";
 import { useMode } from "./collection-mode";
 import { useCollectionData } from "./data";
+import { useCardDrag } from "./drag";
 import { GroupHeaderRow } from "./groups";
 import { useInspector } from "./inspector-state";
 import type { ReleaseGroup, Section } from "./order";
@@ -73,6 +77,7 @@ export function cardGrid(narrow: boolean): { minCard: number; padding: number } 
 export function AlbumCards({
   sections,
   label,
+  viewKey,
   collapsed,
   onToggle,
   moves,
@@ -80,9 +85,10 @@ export function AlbumCards({
 }: {
   sections: readonly Section<Album>[];
   label: string;
+  viewKey: string;
   collapsed: ReadonlySet<ReleaseGroup>;
   onToggle: (group: ReleaseGroup) => void;
-  /** Cards are rearranged by keyboard; the drag handle is a row's (DS-21). */
+  /** Cards are rearranged by keyboard, and in Editing mode by dragging them (TON-322). */
   moves: ViewMoves;
   /** What scrolls above the cards: the list's description (TON-292). */
   lead?: ReactNode;
@@ -128,6 +134,7 @@ export function AlbumCards({
   const selection = useAlbumSelection();
   const { editing } = useMode();
   const selecting = selection !== undefined && editing && !narrow;
+  const toLists = useToLists();
   const { items, virtualizer, isStuck, opening, onKeyDown, cellProps } = useAlbumGrid({
     scroller,
     grid,
@@ -194,6 +201,9 @@ export function AlbumCards({
                   <AlbumCard
                     key={album.id}
                     album={album}
+                    viewKey={viewKey}
+                    manual={moves.handles}
+                    toLists={toLists}
                     width={card}
                     words={words}
                     lines={linesById.get(album.id) ?? { title: 2, artist: 1 }}
@@ -222,6 +232,9 @@ export function AlbumCards({
 
 function AlbumCard({
   album,
+  viewKey,
+  manual,
+  toLists,
   width,
   words,
   lines,
@@ -234,6 +247,11 @@ function AlbumCard({
   ...cell
 }: {
   album: Album;
+  viewKey: string;
+  /** Under Manual sort in Editing mode, the card drags among the cards and takes drops (TON-322). */
+  manual: boolean;
+  /** Whether it drags onto the person's lists in the tree, and the list on view it is in (TON-229). */
+  toLists: { listId: string | undefined } | undefined;
   width: number;
   /** The height of the words under the cover, the same for every card in its row. */
   words: number;
@@ -251,6 +269,26 @@ function AlbumCard({
   const ref = useRef<HTMLDivElement>(null);
   useLiveHighlight(album.id, ref);
   const status = useSaveState(album.id);
+  const drag = useCardDrag(
+    {
+      kind: "album",
+      id: album.id,
+      name: album.title,
+      viewKey,
+      own: toLists !== undefined,
+      listId: toLists?.listId,
+    },
+    manual,
+    manual || toLists !== undefined,
+  );
+  const { ref: dragRef, setZone, dragActive } = drag;
+  const cardRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      ref.current = element;
+      dragRef(element);
+    },
+    [dragRef],
+  );
   const { linksByAlbum } = useCollectionData();
   const label = releaseLabel(album);
   const links = linksByAlbum.get(album.id);
@@ -261,7 +299,7 @@ function AlbumCard({
       : linksThatFit(services, yearWidth(album, true, type, measureText), width, type, measureText);
   return (
     <div
-      ref={ref}
+      ref={cardRef}
       role="gridcell"
       aria-colindex={col + 1}
       aria-busy={isUnderway(status) || undefined}
@@ -269,6 +307,7 @@ function AlbumCard({
       data-open={open || undefined}
       className={cn(
         "group/card relative isolate flex flex-col gap-1 rounded-md focus-ring outline-none",
+        drag.dragging && "opacity-40",
         // Selected, the surface behind it stays, in the selected color.
         "aria-selected:before:bg-selected",
         // The raised surface under a hovering pointer, behind the card and half the gap outside it. It takes no
@@ -277,7 +316,10 @@ function AlbumCard({
       )}
       style={{ width, height: width + words }}
       {...cell}
+      {...drag.listeners}
     >
+      {manual && <CardDropZone ref={setZone} active={dragActive} />}
+      {drag.side && <CardDropLine side={drag.side} height={width} />}
       <span className="relative block">
         <Artwork
           title={album.title}
@@ -360,6 +402,47 @@ function AlbumCard({
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Where a card takes a dragged card: the card and half the gap around it, so a drop between two cards lands beside one
+ * of them (TON-322). Behind the card, as its hover surface is, and taking the pointer only while a drag lasts, so a
+ * click between cards still lands on the grid. Folder cards have it too.
+ */
+export function CardDropZone({
+  ref,
+  active,
+}: {
+  ref: (element: HTMLElement | null) => void;
+  /** Whether anything is being dragged. */
+  active: boolean;
+}) {
+  return (
+    <span
+      ref={ref}
+      aria-hidden
+      data-slot="card-drop-zone"
+      className={cn("absolute -inset-2 -z-10 rounded-lg", !active && "pointer-events-none")}
+    />
+  );
+}
+
+/**
+ * Where a dragged card would land: a line in the middle of the gap left (`before`) or right of this card, as tall as
+ * its cover (TON-322). Folder cards have it too.
+ */
+export function CardDropLine({ side, height }: { side: "before" | "after"; height: number }) {
+  return (
+    <span
+      aria-hidden
+      data-slot="drop-line"
+      className={cn(
+        "pointer-events-none absolute top-0 z-10 w-0.5 rounded-full bg-accent-solid",
+        side === "before" ? "-left-[9px]" : "-right-[9px]",
+      )}
+      style={{ height }}
+    />
   );
 }
 

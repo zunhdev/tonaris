@@ -312,6 +312,8 @@ On hover or focus a trailing "Open" button appears; it opens the service chooser
 
 *As built in TON-284* (decided with the creator, 16 November 2026), replacing TON-280's bottom line: **the year and links follow right after the artist,** in the workspace and on guest pages. Rows keep TON-280's heights, so on a short card in a taller row the spare room falls below the links, into the gap between rows. At the card's bottom they had sat 20 px below their artist but 16 px above the next row's cover, and on these borderless cards read as its caption. In a row, the links now shift by one line at most.
 
+*As built in TON-322:* in Editing mode under Manual, a card drags itself among the cards, and onto a list in the tree (DS-49).
+
 **DS-23 Artwork.**
 - A fixed-aspect box with lazy loading, `decoding="async"`, a `sizes`/`srcset` where the source allows it, and a 150ms fade-in.
 - **Fallback tile:** a neutral surface with the first letter of the title and a hue derived from a hash of the title, desaturated to stay calm. The same tile is used when artwork is missing, still loading, or fails to load. A failed load is never shown as an error. *(FR-03.4)*
@@ -713,6 +715,8 @@ There's no description excerpt or Created column on cards; Rows keeps them.
 
 *As built in TON-285* (variant 8B, the creator's idea, 16 November 2026): **the icon sits in the name's first line,** and a second line starts at the card's left edge, as the count does, with the sharing glyph after it. Every line of words lines up with the cover, as album cards' do, and the second line gains the icon's 22 px. Guest folder cards follow. *As built in TON-175:* the card's name follows its icon, colored as in the tree (DS-27). Shared folders (DS-70) show the same cards in their viewer's presentation, and guest pages (DS-72) in the visit's, with a Rows | Grid control for folders that starts at Grid; the fan there is drawn by classes alone, as the CSP refuses style attributes on server-rendered pages.
 
+*As built in TON-322:* in Editing mode under Manual, a card drags itself among the cards, and onto a folder in the tree to move there (DS-49).
+
 **DS-42 Lists and folders under each sort** *(handoff FR-05.1)*:
 - **Name and creation-date sorts:** folders first, then lists, each sorted by the selected key and direction. This is the filesystem convention and keeps hierarchy scannable.
 - **Manual sort:** one mixed sequence in the person's arrangement.
@@ -779,6 +783,8 @@ There's no description excerpt or Created column on cards; Rows keeps them.
   - a refused value keeps its editor open, focused, with its error, and the mode stays.
 - **Unchanged in both modes:** keyboard rearranging, View options, and opening folders and lists. Selection checkboxes and "+ Add album" come with selection and capture. *(Selection came with TON-231, DS-50: X is edit intent and switches to Editing; leaving Editing clears the selection.)*
 - **Interface state only:** switching sends nothing, and the server judges every write the same (FR-04.2).
+
+*As built in TON-322:* cards have no handle. In Editing mode under Manual, a card drags itself (DS-49).
 
 **DS-46 Album inspector.** It opens with Enter or a click on a row, shows the album at `?album=:id`, and Esc closes it. With the inspector open, J/K moves to the next or previous album. Sections, top to bottom: *(FR-03.1–FR-03.4, FR-06.2–FR-06.4, FR-01.6, FR-01.8, FR-14.1)*
 
@@ -1070,6 +1076,13 @@ There's no description excerpt or Created column on cards; Rows keeps them.
 - **Holding ⌥ at the drop, from a list, moves it:** out of the list on view, into the other, announced "Moved {title} to {list}", with the toast "Moved to {list}" and Undo.
 - **While dragging,** a list that would take the album gets the `accent.soft` background, and under the overlay's name "Add to {list}", or "Move to {list}" with ⌥. A list the album is already in, a folder, and every list while offline take nothing. Albums in a share the person edits can't be dropped on their own lists, another collection.
 - **No sharing preview** shows for an album, as L's dialog shows none: SharingImpact (DS-69) covers moving folders and lists.
+
+*As built in TON-322* (from the creator's manual testing, 22 November 2026), replacing TON-229's "cards have no handle": **cards drag themselves.**
+- **In Editing mode on a computer, under Manual,** an album card, and a folder or list card, drags from anywhere on it among the view's cards. A press that moves less than 6 px is still a click, so a card still opens.
+- **Where it lands:** left or right of the card under the pointer, by the half of it the pointer is in, shown by a 2 px `accent.solid` line in the middle of the gap, as tall as the cover. While a drag lasts, half the gap around each card counts as the card, so a drop between two cards lands there.
+- **The dragged card** fades to 40%, as a dragged row does, and its name chip follows just right of the pointer, wherever the card was taken.
+- **A card does what its row's handle does** (decided by the creator): an album card in the person's own list or Unsorted drags onto their lists in the tree in any sort, as TON-229 has it, and a folder or list card onto a folder in the tree, or Collection, to move it.
+- **On a touch screen,** a swipe on a card scrolls the grid; rows' handles still drag.
 
 **DS-50 Removal and deletion feedback.** *(FR-01.11, FR-01.8, FR-14.1, X-07)*
 

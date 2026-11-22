@@ -119,6 +119,7 @@ function ContainersBody({
       <ContainerCards
         containers={shown}
         label={label}
+        viewKey={viewKey}
         contentsOf={(container) =>
           container.kind === "list"
             ? counted(counts.get(container.id) ?? 0, "album", "albums")

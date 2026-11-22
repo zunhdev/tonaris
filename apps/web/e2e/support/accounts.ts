@@ -84,6 +84,10 @@ export const accounts = {
   dragTarget: at("drag-target"),
   // A drag near the sidebar's edge scrolls it by whole pixels (manual-order.e2e.ts, TON-303).
   dragEdge: at("drag-edge"),
+  // Cards dragged among cards and onto the tree (manual-order.e2e.ts, TON-322).
+  cardDrag: at("card-drag"),
+  folderCardDrag: at("folder-card-drag"),
+  cardOntoList: at("card-onto-list"),
   arrangePlaces: at("arrange-places"),
   arrangeMoves: at("arrange-moves"),
   arrangeSync: at("arrange-sync"),
