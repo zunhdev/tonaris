@@ -58,6 +58,8 @@ export async function open(
   device: keyof typeof devices = "computer",
 ): Promise<Page> {
   const context = await browser.newContext({ ...devices[device], colorScheme: "dark" });
+  // The phone's user agent is an iPhone's: its Home Screen banner (DS-123) stays closed in the pictures.
+  await context.addInitScript(() => localStorage.setItem("tonaris:install-banner", "closed"));
   if (who !== "guest") {
     const cookie = (await sessions())[who];
     const equals = cookie.indexOf("=");

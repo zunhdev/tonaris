@@ -23,7 +23,15 @@ import {
   wcagViolations,
 } from "./support/workspace";
 
-test.use({ storageState: { cookies: [], origins: [] } });
+// Signed out, with the iPhone's Home Screen banner closed, as it would cover the screen's bottom (install-banner.e2e.ts).
+test.use({
+  storageState: {
+    cookies: [],
+    origins: [
+      { origin: webOrigin, localStorage: [{ name: "tonaris:install-banner", value: "closed" }] },
+    ],
+  },
+});
 
 const spotify = "https://open.spotify.com/album/1KQ1Pf4ikoK1jBbOtOHvOv";
 

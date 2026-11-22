@@ -2266,6 +2266,15 @@ The root's first-run state also offers a secondary action, "Connect an AI assist
 - *Since TON-298:* **on a computer,** Chrome and Edge find nothing missing to install it, and Safari's Add to Dock opens it in its own window, with its own Dock icon. Settings → Preferences says how (DS-94).
 - *Since TON-298:* **a link goes to the open window.** The manifest's `launch_handler` is `focus-existing`, then `auto`. When Chrome or Edge opens a Tonaris link in the installed app, they bring its open window forward rather than open another, and the window goes to the link without reloading, so typed text and the sync stream stay. It stays put for the link it's already on.
 
+**DS-123 Home Screen banner** *(section 2.2; decided with the creator 22 November 2026, as built in TON-323)*. On an iPhone or iPad, outside the installed app, the landing page (DS-120) and the workspace suggest adding Tonaris to the Home Screen. Guests' shared pages, sign-in, Help and the legal pages don't. iOS gives pages no install prompt, so Install shows the steps.
+- **The banner:** fixed 12 px above the bottom and in from the sides, at most 416 px wide and centred; `bg.raised`, `border.subtle`, a 16 px radius and the floating shadow. Tonaris's 40 px icon, "Install Tonaris" over "Open it from your Home Screen, like an app.", a primary **Install** and **×** ("Close"), both 44 px tall. It slides up in 200 ms, only fading under reduced motion (DS-17). It's a landmark, "Install Tonaris".
+- **Room under it:** while it shows, the workspace's main pane, the album panel from 768 px and the landing page end 96 px early, so it covers nothing. On a phone the album sheet, dialogs and toasts go over it.
+- **Install** opens a sheet, a bottom sheet on a phone (DS-110), titled "Install Tonaris": "Add it to your Home Screen, and it opens full screen, like an app.", then three steps: "Tap **Share** (its icon). If you don't see it, tap **⋯** beside the address first.", "Tap **Add to Home Screen**." over a picture of that row in `accent.fill` between "Find on Page" and "Markup", blurred, and "Leave **Open as Web App** on, and tap **Add**." In the workspace it adds "The installed app has its own sign-in, so you'll sign in once more there." It ends, over a rule, with "No Add to Home Screen? Copy the link and open it in Safari." and a secondary **Copy link**, for an app's browser that looks like Safari.
+- **In an app's built-in browser** (Threads, Instagram, Facebook and others that name themselves, or a page with no Safari in its user agent), the sheet is "Open Tonaris in Safari": "This app's browser can't add Tonaris to your Home Screen. Copy the link, open it in Safari, and tap Install there.", a primary **Copy link**, and "Or look for Open in Safari, or Open in browser, in this app's ⋯ menu."
+- **Copy link** copies the page's address and reads **Link copied**. If the browser refuses, "Couldn't copy it. Select the address, and copy it from there:" and the address in a field.
+- **×** closes it for good on the device, on the landing page and in the app alike. Preferences (DS-94) and Help still say how.
+- **Android and computers** show none: Chrome shows its own install hint on Android (TON-298).
+
 ---
 
 ## 16. Accessibility and perceived performance
@@ -2325,6 +2334,7 @@ No design questions are open. The creator settled these on 17 October 2026, rows
 | 12 | A landing page (DS-120), 1 Nov 2026 | Direction 1, "in the app's clothes", refined, with invented albums in cover set 1, "Label series"; at `/welcome`, where signed-out visits to `/` arrive, and `/sign-in` back to just the card |
 | 13 | Input borders at rest below 3:1 (DS-14), 7 Nov 2026 | Filled fields with a faint edge (TON-168's 4A): 3:1 under the pointer, told apart at rest by fill, label and place |
 | 14 | Help's look (DS-122), 21 Nov 2026 | From TON-307's canvas: a search-first home with topic tiles (1A), pages in three columns (2A), search as a palette with a results page (3A, 3C), quiet parts with each step's key (4A), a phone top bar (5A, 5C), and the shortcuts as cards by topic (6A) |
+| 15 | Suggesting the install on an iPhone (DS-123), 22 Nov 2026 | A banner on the landing page and in the app, on iPhone and iPad only; × closes it for good on the device |
 
 New questions are added here as **Open (design)** rows.
 
@@ -2352,7 +2362,7 @@ New questions are added here as **Open (design)** rows.
 | Q-01 Performance | DS-01, DS-106, DS-118 |
 | Q-02 Accessibility | DS-03, DS-14, DS-17, DS-27, DS-49, DS-83, DS-115 |
 | Q-10 Experience direction | DS-04, DS-10–DS-20 |
-| X-04 Device scope | DS-07, DS-45, DS-110 |
+| X-04 Device scope | DS-07, DS-45, DS-110, DS-123 |
 | X-07 Confirmations | DS-05, DS-28, DS-50, DS-57 |
 *As built in TON-175:* **Color…** joins the folder and list commands. It has no key of its own, so the palette shows none beside it and doesn't announce a shortcut, and the reference lists it without keys (DS-78). It opens the Color dialog for the focused folder or list (DS-27).
 
