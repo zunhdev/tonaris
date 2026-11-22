@@ -3,10 +3,12 @@
 // the app's clothes", that the creator chose: the app's dark tokens, larger type (DS-13's landing sizes), and pictures
 // drawn from the app's parts with invented albums (pictures.tsx). Rendered on the server and static; once the browser
 // knows the visitor is signed in, its Sign in buttons become Open Tonaris, to their collection (TON-185). Help sits
-// in the header and the footer (TON-315).
+// in the header and the footer (TON-315). On an iPhone or iPad, a banner suggests adding Tonaris to the Home Screen
+// (DS-123, TON-323).
 
 import { useSignedIn } from "@/features/account/session";
 import { FooterLinks } from "@/features/legal/legal-page";
+import { InstallBanner } from "@/features/shell/install-banner";
 import { Link } from "@tanstack/react-router";
 import { Bot, ChevronDown, Download, FolderTree, Share2, Zap, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -58,7 +60,8 @@ function EntryLink({ signedIn, className }: { signedIn: boolean; className: stri
 export function LandingPage() {
   const signedIn = useSignedIn();
   return (
-    <div className="min-h-dvh bg-app text-body text-fg-primary">
+    // Room at the end for the Home Screen banner, while it shows (DS-123).
+    <div data-install-room="" className="min-h-dvh bg-app text-body text-fg-primary">
       <Header signedIn={signedIn} />
       <main aria-labelledby={landingTitleId}>
         <Hero signedIn={signedIn} />
@@ -86,6 +89,7 @@ export function LandingPage() {
           <FooterLinks />
         </div>
       </footer>
+      <InstallBanner signedIn={signedIn} />
     </div>
   );
 }

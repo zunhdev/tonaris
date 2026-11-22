@@ -86,6 +86,8 @@ The substantial first-version scope is accepted. Work is delivered in increments
   The web app can be installed on a phone's home screen, from Chrome on Android or Safari's Add to Home Screen on iOS, and then opens full screen like an app. It still needs a connection to open (decided 30 October 2026, TON-115).
 
   On a computer, Chrome and Edge install it, and Safari on a Mac adds it to the Dock. It then opens in its own window, which a person switches to like any other app. Settings says how to install it in the browser at hand (decided 18 November 2026, TON-298).
+
+  On an iPhone or iPad, the landing page and the app suggest installing it, with the steps, until the person closes the suggestion on that device. In an app's built-in browser, which can't install it, they suggest opening Tonaris in Safari (decided 22 November 2026, TON-323).
 - **Supported browsers.** Desktop: Chrome, Edge, Firefox, and Safari. Mobile: Safari on iOS and Chrome on Android. Exact versions and the OS test matrix are in the tech spec.
 - **Later platforms.** Native iOS and Android apps are planned for a later phase, and desktop apps for a more distant one. They are not specified here. Native apps will use the same service API as the web app (tech spec). On a computer, the installed web app stands in for a desktop app. A wrapped one, such as Tauri, would only be built for something a browser can't do (decided 18 November 2026, TON-298).
 

@@ -8,7 +8,8 @@
 // over the view. On desktop the shell is the window and the page itself never scrolls (TON-158): the main pane
 // scrolls a page that has no scroll area of its own, such as Account. The album panel slides in and out
 // (inspector-slide.ts, TON-159). A folder's or list's description panel takes the same slot (TON-292): while it is
-// open it shows instead of the album, and opening either closes the other.
+// open it shows instead of the album, and opening either closes the other. On an iPhone or iPad, a banner suggests
+// adding Tonaris to the Home Screen (DS-123).
 
 import { inspectorLayout, sidebarLayout } from "@/common/device";
 import { useNarrowScreen, useWideScreen } from "@/common/media";
@@ -51,6 +52,7 @@ import type { Account } from "@tonaris/domain";
 import { cn } from "@tonaris/ui/lib/utils";
 
 import { useInspectorSlide } from "./inspector-slide";
+import { InstallBanner } from "./install-banner";
 import { usePageFade } from "./page-fade";
 import { PullToRefresh } from "./pull-to-refresh";
 import { ShortcutReference } from "./shortcut-reference";
@@ -227,6 +229,7 @@ export function Shell({ account, children }: { account: Account; children: React
       <InvitationToasts accountId={account.id} />
       <LostShareEdits />
       {narrow && <PullToRefresh />}
+      <InstallBanner signedIn />
       <DeleteFolderDialog />
       <DeleteAlbumDialog />
       <DeleteAlbumsDialog />

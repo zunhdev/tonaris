@@ -3,8 +3,10 @@
 // on an iPhone or iPad, and short directions elsewhere; and says so when Tonaris already runs as an installed app.
 // The manifest's `launch_handler` asks Chrome and Edge to bring an installed app's open window forward for a link,
 // rather than open another; that window then goes to the link here, without reloading.
+// On an iPhone or iPad, a banner also suggests adding Tonaris to the Home Screen (DS-123, TON-323), until closed.
 
 import { useMediaQuery } from "@/common/media";
+import { readText, writeText } from "@/common/storage";
 import { useSyncExternalStore } from "react";
 
 /** Chrome and Edge's install offer (`beforeinstallprompt`), which the lib types don't have. */
@@ -150,4 +152,74 @@ export function useInstallAdvice(): InstallAdvice {
     userAgent: nav?.userAgent ?? "",
     maxTouchPoints: nav?.maxTouchPoints ?? 0,
   });
+}
+
+/**
+ * What the Home Screen banner's Install shows (DS-123): the steps, or, in an app's built-in browser, which has no Add to
+ * Home Screen, the way to Safari.
+ */
+export type HomeScreenOffer = "steps" | "safari";
+
+// Apps' built-in browsers that name themselves: Instagram, Facebook, Threads ("Barcelona"), LinkedIn, LINE, Snapchat,
+// TikTok, the Google app and WeChat.
+const appBrowsers =
+  /Instagram|FBAN|FBAV|FB_IAB|Barcelona|LinkedInApp|\bLine\/|Snapchat|musical_ly|BytedanceWebview|TikTok|GSA\/|MicroMessenger/;
+
+/**
+ * Whether an iPhone's or iPad's page is in an app's built-in browser. Safari, and Chrome, Firefox and Edge, which can
+ * add to the Home Screen too, name Safari in their user agent; a bare web view doesn't. An app that shows pages in
+ * Safari's own view can't be told from Safari, so the steps say what to do there. No feature check tells these apart,
+ * so this one reads the user agent.
+ */
+export function inAppBrowser(userAgent: string): boolean {
+  return appBrowsers.test(userAgent) || !/Safari\//.test(userAgent);
+}
+
+/** What the Home Screen banner offers here, if it shows at all: only on an iPhone or iPad, outside the installed app. */
+export function homeScreenOffer(
+  facts: Pick<InstallFacts, "standalone" | "userAgent" | "maxTouchPoints">,
+): HomeScreenOffer | undefined {
+  const advice = installAdvice({ ...facts, installed: false, canPrompt: false });
+  if (advice !== "ios") return undefined;
+  return inAppBrowser(facts.userAgent) ? "safari" : "steps";
+}
+
+/** Where this device keeps that the banner was closed: for good, on the landing page and in the app alike. */
+export const bannerClosedKey = "tonaris:install-banner";
+
+const bannerListeners = new Set<() => void>();
+// Closed in this page even when storage refuses the write, as in a private window.
+let closedHere = false;
+
+const subscribeBanner = (listener: () => void) => {
+  bannerListeners.add(listener);
+  return () => bannerListeners.delete(listener);
+};
+
+/** Closes the banner on this device for good (DS-123); Preferences and Help still say how to install. */
+export function closeBanner(): void {
+  writeText(bannerClosedKey, "closed");
+  closedHere = true;
+  for (const listener of bannerListeners) listener();
+}
+
+const bannerClosed = () => closedHere || readText(bannerClosedKey) === "closed";
+
+const deviceOffer = (): HomeScreenOffer | "none" =>
+  homeScreenOffer({
+    standalone: globalThis.matchMedia?.("(display-mode: standalone)").matches || homeScreenApp(),
+    userAgent: navigator.userAgent,
+    maxTouchPoints: navigator.maxTouchPoints,
+  }) ?? "none";
+
+const unchanging = () => () => {};
+
+/**
+ * What the Home Screen banner offers, or undefined while it doesn't show: on the server, and until the page is
+ * hydrated, so the landing page's server render matches; elsewhere than an iPhone or iPad; and once closed.
+ */
+export function useHomeScreenOffer(): HomeScreenOffer | undefined {
+  const closed = useSyncExternalStore(subscribeBanner, bannerClosed, () => true);
+  const here = useSyncExternalStore(unchanging, deviceOffer, () => "none" as const);
+  return closed || here === "none" ? undefined : here;
 }

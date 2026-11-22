@@ -90,6 +90,20 @@
   color: var(--fg-primary);
 }
 
+/*
+ * The Home Screen banner (DS-123) sits over the bottom of the screen. While it shows, the workspace's main pane, the
+ * album panel from 768px, where it isn't a sheet over the banner, and the landing page end above it.
+ */
+body:has([data-install-banner]) :is([data-page-scroll="main"], [data-install-room]) {
+  padding-bottom: 6rem;
+}
+
+@media (min-width: 768px) {
+  body:has([data-install-banner]) [data-page-scroll="album"] {
+    padding-bottom: 6rem;
+  }
+}
+
 /* A pending save's marker shows only after 300ms (DS-80); it then appears without motion. */
 @keyframes save-state-appear {
   to {
