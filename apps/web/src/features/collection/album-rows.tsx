@@ -27,6 +27,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -100,10 +101,7 @@ export function AlbumRows({
   const offline = useConnection() === "offline";
   const { editing, enterEditing } = useMode();
   const { registerEditor } = useCollectionMode();
-  // In Editing mode on a computer, the person's own albums drag onto their lists in the tree, in any sort (TON-229).
-  const ownView = useCollectionPlace().kind !== "share";
-  const viewListId = useViewContainerId();
-  const toLists = editing && !compact && ownView ? { listId: viewListId } : undefined;
+  const toLists = useToLists();
   // In Editing mode on a computer, albums can be selected (TON-231).
   const selection = useAlbumSelection();
   const selecting = selection !== undefined && editing && !compact;
@@ -516,6 +514,20 @@ function AlbumRow({
       {cells}
     </div>
   );
+}
+
+/**
+ * Whether the view's albums drag onto the person's lists in the tree, and the list on view, which ⌥ moves them out of:
+ * in Editing mode on a computer, in their own lists and Unsorted, in any sort (TON-229). Rows by their handle, cards
+ * as they are (TON-322).
+ */
+export function useToLists(): { listId: string | undefined } | undefined {
+  const { editing } = useMode();
+  const narrow = useNarrowScreen();
+  const ownView = useCollectionPlace().kind !== "share";
+  const listId = useViewContainerId();
+  const on = editing && !narrow && ownView;
+  return useMemo(() => (on ? { listId } : undefined), [on, listId]);
 }
 
 /**

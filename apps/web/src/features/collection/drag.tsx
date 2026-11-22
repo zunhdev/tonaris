@@ -1,13 +1,14 @@
-// Dragging (DS-49, DS-27, DS-21): one dnd-kit context for the workspace, so a drag that starts in a view can end on
-// the sidebar tree. Under Manual sort, a row's handle drags it among its view's rows, a line showing where it would
-// land; a drop rearranges (TS-16). A folder or list, dragged from its row or the tree, moves when dropped onto a
-// folder in the tree or onto Collection, which highlight while it is over them (FR-01.4, FR-01.5). Pointer only:
-// the keyboard rearranges with ⌥↑ / ⌥↓ and moves with M. Only rows in view can be targets, since the rest are not
-// drawn; the overlay keeps the dragged item's name in sight as the view scrolls, where the pointer took hold of it,
-// and over a folder it can move into, what the move would do to sharing (DS-69, FR-07.14). The target is what is
-// under the pointer on the page as it is, so rows that move during a drag are found where they went (TON-302). An
-// album from the person's own list or Unsorted, dropped on another of their lists in the tree, joins it; with ⌥
-// held, from a list, it moves there (TON-229).
+// Dragging (DS-49, DS-27, DS-21): one dnd-kit context for the workspace, so a drag that starts in a view can end on the
+// sidebar tree. Under Manual sort, a row's handle drags it among its view's rows, a line showing where it would land; a
+// drop rearranges (TS-16). A card has no handle: it drags itself, among its view's cards, landing left or right of the
+// card under the pointer, the gap around each card counting as the card while a drag lasts (TON-322). A folder or list,
+// dragged from its row, its card or the tree, moves when dropped onto a folder in the tree or onto Collection, which
+// highlight while it is over them (FR-01.4, FR-01.5). Pointer only: the keyboard rearranges with ⌥↑ / ⌥↓ and moves with
+// M. Only rows and cards in view can be targets, since the rest are not drawn; the overlay keeps the dragged item's
+// name in sight as the view scrolls, where the pointer took hold of it, and over a folder it can move into, what the
+// move would do to sharing (DS-69, FR-07.14). The target is what is under the pointer on the page as it is, so rows
+// that move during a drag are found where they went (TON-302). An album from the person's own list or Unsorted, dropped
+// on another of their lists in the tree, joins it; with ⌥ held, from a list, it moves there (TON-229).
 
 import { SharingImpactPreview } from "@/features/sharing/sharing-impact";
 import { useConnection } from "@/features/sync/sync-provider";
@@ -59,9 +60,20 @@ export type DragItem = {
   viewKey: string | undefined;
   own?: boolean;
   listId?: string;
+  /** Dragged by a card, held anywhere in it: the name chip sits at the pointer (TON-322). */
+  card?: boolean;
 };
 
-type RowTarget = { type: "row"; viewKey: string; itemId: string };
+/**
+ * A row or a card, as a place a dragged item of its view lands beside: before or after it, by the half of it the
+ * pointer is in, top or bottom for a row (`vertical`), left or right for a card (`horizontal`).
+ */
+type RowTarget = {
+  type: "row";
+  viewKey: string;
+  itemId: string;
+  axis: "vertical" | "horizontal";
+};
 type DestinationTarget = { type: "destination"; parentId: string | null };
 type ListTarget = { type: "list"; listId: string; name: string };
 
@@ -113,30 +125,44 @@ const underPointer: CollisionDetection = ({ droppableContainers, pointerCoordina
     const container = targets.get(element);
     if (container) {
       const place = element.getBoundingClientRect();
-      const pointerY = pointerCoordinates.y;
+      const { x: pointerX, y: pointerY } = pointerCoordinates;
       return [
-        { id: container.id, data: { droppableContainer: container, value: 0, place, pointerY } },
+        {
+          id: container.id,
+          data: { droppableContainer: container, value: 0, place, pointerX, pointerY },
+        },
       ];
     }
   }
   return [];
 };
 
-/** The row a drag is over, and which half of it the pointer is in, as `underPointer` found them. */
+/** The row or card a drag is over, and which half of it the pointer is in, as `underPointer` found them. */
 function rowTargetOf(event: DragMoveEvent | DragEndEvent): (RowTarget & Indicator) | undefined {
   const { over, collisions } = event;
   const data = over?.data.current;
   if (!over || !isRow(data)) return undefined;
   const found = collisions?.find((each) => each.id === over.id)?.data;
   const place: unknown = found?.["place"];
+  const pointerX: unknown = found?.["pointerX"];
   const pointerY: unknown = found?.["pointerY"];
-  if (!(place instanceof DOMRect) || typeof pointerY !== "number") return undefined;
-  const side = pointerY < place.top + place.height / 2 ? "before" : "after";
-  return { ...data, side };
+  if (!(place instanceof DOMRect) || typeof pointerX !== "number" || typeof pointerY !== "number")
+    return undefined;
+  const before =
+    data.axis === "horizontal"
+      ? pointerX < place.left + place.width / 2
+      : pointerY < place.top + place.height / 2;
+  return { ...data, side: before ? "before" : "after" };
 }
 
 /** Where in the dragged item the pointer took hold of it, by its press, measured as the press lands (TON-302). */
 const grips = new WeakMap<Event, { x: number; y: number }>();
+
+/**
+ * A card's grip, whatever part of it was pressed: the chip just right of the pointer and centred on it, where a row's
+ * ends up, held by its handle at the row's left. The card's own grip could leave it 100 px away (TON-322).
+ */
+const cardGrip = { x: -8, y: 16 };
 
 /**
  * dnd-kit's pointer sensor, also noting where in the item a press lands. The drag starts 6 px later, and by then the
@@ -154,8 +180,10 @@ class GripSensor extends PointerSensor {
       ) => {
         const [press] = PointerSensor.activators;
         if (!press?.handler(event, options)) return false;
+        const data: unknown = context?.active.data.current;
         const item = context?.active.node.current?.getBoundingClientRect();
-        if (item) {
+        if (isDragItem(data) && data.card === true) grips.set(event.nativeEvent, cardGrip);
+        else if (item) {
           grips.set(event.nativeEvent, {
             x: event.clientX - item.left,
             y: event.clientY - item.top,
@@ -363,6 +391,33 @@ export function useDropHandler(viewKey: string, drop: ViewMoves["drop"]): void {
   useEffect(() => registerDrop(viewKey, drop), [registerDrop, viewKey, drop]);
 }
 
+/** A view's row or card as a drag source, and a drop target among its siblings, laid out along `axis`. */
+function useItemDrag(
+  item: DragItem & { viewKey: string },
+  enabled: boolean,
+  draggable: boolean,
+  axis: RowTarget["axis"],
+) {
+  const { active, indicator } = useContext(DragContext);
+  const drop = useDroppable({
+    id: `row:${item.viewKey}:${item.id}`,
+    data: { type: "row", viewKey: item.viewKey, itemId: item.id, axis } satisfies RowTarget,
+    disabled: !enabled,
+  });
+  const drag = useDraggable({
+    id: `row-item:${item.viewKey}:${item.id}`,
+    data: item,
+    disabled: !draggable,
+  });
+  return {
+    drop,
+    drag,
+    /** Whether anything is being dragged. */
+    dragActive: active !== undefined,
+    side: indicator?.itemId === item.id ? indicator.side : undefined,
+  };
+}
+
 /**
  * A view's row as a drag source, by its handle, and a drop target among its siblings, under Manual sort. Answers
  * the row's ref, the handle's props, whether it is being dragged, and where a drop would land beside it.
@@ -373,17 +428,7 @@ export function useRowDrag(
   /** Whether it can be dragged even where rows take no drops: an album, onto a list in the tree (TON-229). */
   draggable = enabled,
 ) {
-  const { indicator } = useContext(DragContext);
-  const drop = useDroppable({
-    id: `row:${item.viewKey}:${item.id}`,
-    data: { type: "row", viewKey: item.viewKey, itemId: item.id } satisfies RowTarget,
-    disabled: !enabled,
-  });
-  const drag = useDraggable({
-    id: `row-item:${item.viewKey}:${item.id}`,
-    data: item,
-    disabled: !draggable,
-  });
+  const { drop, drag, side } = useItemDrag(item, enabled, draggable, "vertical");
   const { setNodeRef: setDropRef } = drop;
   const { setNodeRef: setDragRef } = drag;
   const ref = useCallback(
@@ -397,7 +442,35 @@ export function useRowDrag(
     ref,
     handle: { ref: drag.setActivatorNodeRef, ...drag.listeners },
     dragging: drag.isDragging,
-    side: indicator?.itemId === item.id ? indicator.side : undefined,
+    side,
+  };
+}
+
+/**
+ * A view's card as a drag source, held anywhere in it, and a drop target among its siblings, under Manual sort
+ * (TON-322). Answers the card's ref and listeners, its drop zone's ref (`setZone`, for `CardDropZone`), whether
+ * anything is being dragged, which the zone takes the pointer only while, whether the card is, and where a drop would
+ * land beside it: left (`before`) or right.
+ */
+export function useCardDrag(
+  item: DragItem & { viewKey: string },
+  enabled: boolean,
+  /** Whether it can be dragged even where cards take no drops: an album, onto a list in the tree (TON-229). */
+  draggable = enabled,
+) {
+  const { drop, drag, dragActive, side } = useItemDrag(
+    { ...item, card: true },
+    enabled,
+    draggable,
+    "horizontal",
+  );
+  return {
+    ref: drag.setNodeRef,
+    listeners: drag.listeners,
+    setZone: drop.setNodeRef,
+    dragActive,
+    dragging: drag.isDragging,
+    side,
   };
 }
 
