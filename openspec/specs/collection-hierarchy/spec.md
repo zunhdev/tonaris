@@ -274,7 +274,7 @@ In a list, ⌫ on a focused album SHALL take it out of that list, switching to E
 - **THEN** the album is back in "Doom"
 
 ### Requirement: Albums dragged onto a list in the sidebar join it
-In Editing mode on a computer, an album dragged by its handle from the person's own list or Unsorted onto another of their lists in the sidebar SHALL be added to that list and SHALL stay where it was. Holding ⌥ at the drop, from a list, SHALL move it instead, with Undo. A list the album is already in, a folder, and any list while offline SHALL take no drop, and albums in a share SHALL NOT be dropped on the person's own lists (DS-49).
+In Editing mode on a computer, an album dragged by its row's handle or by its card from the person's own list or Unsorted onto another of their lists in the sidebar SHALL be added to that list and SHALL stay where it was. Holding ⌥ at the drop, from a list, SHALL move it instead, with Undo. A list the album is already in, a folder, and any list while offline SHALL take no drop, and albums in a share SHALL NOT be dropped on the person's own lists (DS-49, TON-322).
 
 #### Scenario: Adding by dragging
 - **WHEN** the owner drags 'Dopesmoker' from the list "Doom" onto the list "Stoner" in the sidebar
@@ -283,6 +283,10 @@ In Editing mode on a computer, an album dragged by its handle from the person's 
 #### Scenario: Moving with ⌥
 - **WHEN** the owner holds ⌥ while dropping 'Dopesmoker' from "Doom" onto "Stoner"
 - **THEN** it leaves "Doom" for "Stoner", and a toast "Moved to Stoner" offers Undo
+
+#### Scenario: Adding by dragging a card
+- **WHEN** the owner, with "Doom" shown as a grid and sorted by year, drags the card 'Dopesmoker' onto the list "Stoner" in the sidebar
+- **THEN** it is in both lists, and "Added Dopesmoker to Stoner" is announced
 
 ### Requirement: Selected albums are acted on together
 In Editing mode on a computer, a person SHALL select albums in a list or Unsorted by X, ⇧↑ and ⇧↓, or by checkboxes shown on an album's hover or focus, and on every album while any is selected. They SHALL see how many are selected. Add to list, removing from the list on view and deleting SHALL act on all of them in one batch; adding and removing SHALL offer Undo, and deleting SHALL be confirmed first (DS-21, DS-50).
